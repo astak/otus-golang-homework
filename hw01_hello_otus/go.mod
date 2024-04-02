@@ -1,4 +1,4 @@
-module github.com/astak/hw01_hello_otus
+module github.com/astak/otus-golang-homework/hw01_hello_otus
 
 go 1.19
 
