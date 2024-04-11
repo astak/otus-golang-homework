@@ -5,78 +5,27 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-	"unicode/utf8"
-)
 
-const escapeSymbol = '\\'
+	tokenizer "github.com/astak/otus-golang-homework/hw02_unpack_string/iterator"
+)
 
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(str string) (string, error) {
-	next := newTokenizer(str)
-	st := state{}
-
-	for r, ok := next(); ok; r, ok = next() {
-		if err := st.Visit(r); err != nil {
-			return "", err
-		}
+	builder := builder{}
+	if err := tokenizer.Scan(str, builder.Visit); err != nil {
+		return "", err
 	}
 
-	return st.String(), nil
+	return builder.String(), nil
 }
 
-const (
-	tokenRune = iota
-	tokenDigit
-	tokenEscaped
-)
-
-type token struct {
-	kind  int
-	value rune
-}
-
-func newTokenizer(str string) func() (*token, bool) {
-	data := str
-	position := 0
-
-	return func() (*token, bool) {
-		r, size := utf8.DecodeRuneInString(data[position:])
-		if r == utf8.RuneError {
-			return nil, false
-		}
-		position += size
-
-		if r == escapeSymbol {
-			r, size = utf8.DecodeRuneInString(data[position:])
-			position += size
-
-			return &token{
-				kind:  tokenEscaped,
-				value: r,
-			}, true
-		}
-
-		if unicode.IsDigit(r) {
-			return &token{
-				kind:  tokenDigit,
-				value: r,
-			}, true
-		}
-
-		return &token{
-			kind:  tokenRune,
-			value: r,
-		}, true
-	}
-}
-
-type state struct {
+type builder struct {
 	builder strings.Builder
 	last    rune
 }
 
-func (st *state) visitDigit(r rune) error {
+func (st *builder) visitDigit(r rune) error {
 	if st.last == 0 {
 		return ErrInvalidString
 	}
@@ -91,7 +40,7 @@ func (st *state) visitDigit(r rune) error {
 	return nil
 }
 
-func (st *state) visitRune(r rune) error {
+func (st *builder) visitRune(r rune) error {
 	if st.last != 0 {
 		st.builder.WriteRune(st.last)
 	}
@@ -100,32 +49,32 @@ func (st *state) visitRune(r rune) error {
 	return nil
 }
 
-func (st *state) visitEscaped(r rune) error {
-	if !(unicode.IsDigit(r) || r == escapeSymbol) {
+func (st *builder) visitEscaped(r rune) error {
+	if !(unicode.IsDigit(r) || r == tokenizer.EscapeSymbol) {
 		return ErrInvalidString
 	}
 
 	return st.visitRune(r)
 }
 
-func (st *state) Visit(t *token) error {
+func (st *builder) Visit(t *tokenizer.Token) error {
 	if t == nil {
 		return ErrInvalidString
 	}
 
-	switch t.kind {
-	case tokenRune:
-		return st.visitRune(t.value)
-	case tokenDigit:
-		return st.visitDigit(t.value)
-	case tokenEscaped:
-		return st.visitEscaped(t.value)
+	switch t.Kind {
+	case tokenizer.TokenRune:
+		return st.visitRune(t.Value)
+	case tokenizer.TokenDigit:
+		return st.visitDigit(t.Value)
+	case tokenizer.TokenEscaped:
+		return st.visitEscaped(t.Value)
 	default:
 		return ErrInvalidString
 	}
 }
 
-func (st *state) String() string {
+func (st *builder) String() string {
 	if st.last != 0 {
 		st.builder.WriteRune(st.last)
 	}
