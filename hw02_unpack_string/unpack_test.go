@@ -51,3 +51,9 @@ func TestUnpackInvalidString(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkUnpack(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Unpack("a4bc2d5e")
+	}
+}
