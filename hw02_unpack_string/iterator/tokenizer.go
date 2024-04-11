@@ -19,18 +19,18 @@ type Token struct {
 }
 
 func NewTokenizer(str string) func() (*Token, bool) {
-	data := str
+	data := []byte(str)
 	position := 0
 
 	return func() (*Token, bool) {
-		r, size := utf8.DecodeRuneInString(data[position:])
+		r, size := utf8.DecodeRune(data[position:])
 		if r == utf8.RuneError {
 			return nil, false
 		}
 		position += size
 
 		if r == EscapeSymbol {
-			r, size = utf8.DecodeRuneInString(data[position:])
+			r, size = utf8.DecodeRune(data[position:])
 			position += size
 
 			return &Token{

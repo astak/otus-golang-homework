@@ -42,3 +42,17 @@ BenchmarkUnpack-12       2411959               485.8 ns/op           168 B/op   
 PASS
 ok      github.com/astak/otus-golang-homework/hw02_unpack_string        1.686s
 ```
+### Исходная оптимизированная реализация
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkUnpack$ github.com/astak/otus-golang-homework/hw02_unpack_string
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+=== RUN   BenchmarkUnpack
+BenchmarkUnpack
+BenchmarkUnpack-12       2460854               486.8 ns/op           168 B/op         13 allocs/op
+PASS
+ok      github.com/astak/otus-golang-homework/hw02_unpack_string        1.702s
+```
