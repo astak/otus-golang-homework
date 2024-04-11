@@ -57,11 +57,7 @@ func (st *builder) visitEscaped(r rune) error {
 	return st.visitRune(r)
 }
 
-func (st *builder) Visit(t *tokenizer.Token) error {
-	if t == nil {
-		return ErrInvalidString
-	}
-
+func (st *builder) Visit(t tokenizer.Token) error {
 	switch t.Kind {
 	case tokenizer.TokenRune:
 		return st.visitRune(t.Value)

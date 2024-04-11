@@ -81,3 +81,52 @@ BenchmarkScan-12    	 5691138	       210.3 ns/op	     128 B/op	       8 allocs/o
 PASS
 ok  	github.com/astak/otus-golang-homework/hw02_unpack_string/loop	1.420s
 ```
+### Избавился от аллокаций токена паредавая его по значению а не по ссылке
+#### Бенчмарк tokenizer на итераторе
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkScan$ github.com/astak/otus-golang-homework/hw02_unpack_string/iterator
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string/iterator
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkScan-12    	18537831	        66.64 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string/iterator	1.308s
+```
+#### Бенчмарк tokenizer на цикле
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkScan$ github.com/astak/otus-golang-homework/hw02_unpack_string/loop
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string/loop
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkScan-12    	46649948	        26.62 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string/loop	1.276s
+```
+#### Бенчмарк метода Unpack на базе итератора
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkUnpack$ github.com/astak/otus-golang-homework/hw02_unpack_string
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkUnpack-12    	 3565096	       328.6 ns/op	      40 B/op	       5 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string	1.519s
+```
+#### Бенчмарк метода Unpack на базе цикла
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkUnpack$ github.com/astak/otus-golang-homework/hw02_unpack_string
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkUnpack-12    	 4314504	       272.9 ns/op	      40 B/op	       5 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string	1.468s
+```

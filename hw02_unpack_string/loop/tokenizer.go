@@ -15,7 +15,7 @@ type Token struct {
 	Value rune
 }
 
-func Scan(str string, accept func(token *Token) error) error {
+func Scan(str string, accept func(token Token) error) error {
 	var prev rune
 	for _, r := range str {
 		if r == EscapeSymbol && prev != EscapeSymbol {
@@ -23,19 +23,19 @@ func Scan(str string, accept func(token *Token) error) error {
 			continue
 		}
 
-		var token *Token
+		var token Token
 		if prev == EscapeSymbol {
-			token = &Token{
+			token = Token{
 				Kind:  TokenEscaped,
 				Value: r,
 			}
 		} else if unicode.IsDigit(r) {
-			token = &Token{
+			token = Token{
 				Kind:  TokenDigit,
 				Value: r,
 			}
 		} else {
-			token = &Token{
+			token = Token{
 				Kind:  TokenRune,
 				Value: r,
 			}
