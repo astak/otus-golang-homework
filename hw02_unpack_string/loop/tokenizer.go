@@ -24,17 +24,18 @@ func Scan(str string, accept func(token Token) error) error {
 		}
 
 		var token Token
-		if prev == EscapeSymbol {
+		switch {
+		case prev == EscapeSymbol:
 			token = Token{
 				Kind:  TokenEscaped,
 				Value: r,
 			}
-		} else if unicode.IsDigit(r) {
+		case unicode.IsDigit(r):
 			token = Token{
 				Kind:  TokenDigit,
 				Value: r,
 			}
-		} else {
+		default:
 			token = Token{
 				Kind:  TokenRune,
 				Value: r,
