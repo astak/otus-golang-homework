@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	tokenizer "github.com/astak/otus-golang-homework/hw02_unpack_string/iterator"
+	tokenizer "github.com/astak/otus-golang-homework/hw02_unpack_string/loop"
 )
 
 var ErrInvalidString = errors.New("invalid string")
