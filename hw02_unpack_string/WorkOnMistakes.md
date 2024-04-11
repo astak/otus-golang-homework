@@ -56,3 +56,28 @@ BenchmarkUnpack-12       2460854               486.8 ns/op           168 B/op   
 PASS
 ok      github.com/astak/otus-golang-homework/hw02_unpack_string        1.702s
 ```
+### Добавил бенчмарк на оба варианта tokenizer
+#### Итератор
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkScan$ github.com/astak/otus-golang-homework/hw02_unpack_string/iterator
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string/iterator
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkScan-12    	 4747164	       248.9 ns/op	     128 B/op	       8 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string/iterator	1.446s
+```
+#### Цикл
+```
+Running tool: /usr/local/go/bin/go test -benchmem -run=^$ -bench ^BenchmarkScan$ github.com/astak/otus-golang-homework/hw02_unpack_string/loop
+
+goos: linux
+goarch: amd64
+pkg: github.com/astak/otus-golang-homework/hw02_unpack_string/loop
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkScan-12    	 5691138	       210.3 ns/op	     128 B/op	       8 allocs/op
+PASS
+ok  	github.com/astak/otus-golang-homework/hw02_unpack_string/loop	1.420s
+```
