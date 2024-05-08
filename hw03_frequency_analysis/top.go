@@ -6,10 +6,25 @@ import (
 	"strings"
 )
 
-var patternTrim = regexp.MustCompile(`^[[:punct:]]+|[[:punct:]]+$`)
-var patternAllPunc = regexp.MustCompile(`^[[:punct:]]{2,}$`)
+var (
+	patternTrim    = regexp.MustCompile(`^[[:punct:]]+|[[:punct:]]+$`)
+	patternAllPunc = regexp.MustCompile(`^[[:punct:]]{2,}$`)
+)
 
 func Top10(s string) []string {
+	tokens := split(s)
+	words := sort(tokens)
+	return words[:min(10, len(words))]
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func split(s string) map[string]int {
 	s = strings.ToLower(s)
 	words := map[string]int{}
 	for _, word := range strings.Fields(s) {
@@ -20,7 +35,10 @@ func Top10(s string) []string {
 			words[word]++
 		}
 	}
+	return words
+}
 
+func sort(words map[string]int) []string {
 	keys := make([]string, 0, len(words))
 	for key := range words {
 		keys = append(keys, key)
@@ -34,12 +52,5 @@ func Top10(s string) []string {
 		return result
 	})
 
-	return keys[:min(10, len(keys))]
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+	return keys
 }
