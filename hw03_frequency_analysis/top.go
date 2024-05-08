@@ -2,7 +2,7 @@ package hw03frequencyanalysis
 
 import (
 	"regexp"
-	"slices"
+	"sort"
 	"strings"
 )
 
@@ -13,7 +13,7 @@ var (
 
 func Top10(s string) []string {
 	tokens := split(s)
-	words := sort(tokens)
+	words := getInOrder(tokens)
 	return words[:min(10, len(words))]
 }
 
@@ -38,18 +38,18 @@ func split(s string) map[string]int {
 	return words
 }
 
-func sort(words map[string]int) []string {
+func getInOrder(words map[string]int) []string {
 	keys := make([]string, 0, len(words))
 	for key := range words {
 		keys = append(keys, key)
 	}
 
-	slices.SortFunc(keys, func(a, b string) int {
-		result := words[b] - words[a]
+	sort.Slice(keys, func(i, j int) bool {
+		result := words[keys[j]] - words[keys[i]]
 		if result == 0 {
-			result = strings.Compare(a, b)
+			result = strings.Compare(keys[i], keys[j])
 		}
-		return result
+		return result < 0
 	})
 
 	return keys
