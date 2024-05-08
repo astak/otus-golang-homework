@@ -1,14 +1,24 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"slices"
 	"strings"
 )
 
+var patternTrim = regexp.MustCompile(`^[[:punct:]]+|[[:punct:]]+$`)
+var patternAllPunc = regexp.MustCompile(`^[[:punct:]]{2,}$`)
+
 func Top10(s string) []string {
+	s = strings.ToLower(s)
 	words := map[string]int{}
 	for _, word := range strings.Fields(s) {
-		words[word]++
+		if !patternAllPunc.MatchString(word) {
+			word = patternTrim.ReplaceAllLiteralString(word, "")
+		}
+		if word != "" {
+			words[word]++
+		}
 	}
 
 	keys := make([]string, 0, len(words))
