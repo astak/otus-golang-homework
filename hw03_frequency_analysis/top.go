@@ -14,7 +14,7 @@ var (
 func Top10(s string) []string {
 	tokens := split(s)
 	words := getInOrder(tokens)
-	return words[:min(10, len(words))]
+	return append([]string(nil), words[:min(10, len(words))]...)
 }
 
 func min(a, b int) int {
