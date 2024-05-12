@@ -40,33 +40,54 @@ func (l *list) Back() *ListItem {
 
 func (l *list) PushFront(v interface{}) (item *ListItem) {
 	item = &ListItem{Value: v}
-	if l.front == nil {
-		l.front = item
-		l.back = item
-	} else {
-		item.Next = l.front
-		l.front.Prev = item
-		l.front = item
-	}
+	l.prepend(item)
 	l.count++
 	return
 }
 
 func (l *list) PushBack(v interface{}) (item *ListItem) {
 	item = &ListItem{Value: v}
-	if l.back == nil {
-		l.back = item
-		l.front = item
-	} else {
-		item.Prev = l.back
-		l.back.Next = item
-		l.back = item
-	}
+	l.append(item)
 	l.count++
 	return
 }
 
 func (l *list) Remove(i *ListItem) {
+	l.detach(i)
+	l.count--
+}
+
+func (l *list) MoveToFront(i *ListItem) {
+	if l.front == i {
+		return
+	}
+	l.detach(i)
+	l.prepend(i)
+}
+
+func (l *list) prepend(i *ListItem) {
+	if l.front == nil {
+		l.front = i
+		l.back = i
+	} else {
+		i.Next = l.front
+		l.front.Prev = i
+		l.front = i
+	}
+}
+
+func (l *list) append(i *ListItem) {
+	if l.back == nil {
+		l.front = i
+		l.back = i
+	} else {
+		i.Prev = l.back
+		l.back.Next = i
+		l.back = i
+	}
+}
+
+func (l *list) detach(i *ListItem) {
 	if i.Next == nil {
 		l.back = i.Prev
 	} else {
@@ -79,26 +100,4 @@ func (l *list) Remove(i *ListItem) {
 	}
 	i.Next = nil
 	i.Prev = nil
-	l.count--
-}
-
-func (l *list) MoveToFront(i *ListItem) {
-	if i == l.front {
-		return
-	}
-	if i == l.back {
-		l.back = i.Prev
-	}
-	if i.Next != nil {
-		i.Next.Prev = i.Prev
-	}
-	if i.Prev != nil {
-		i.Prev.Next = i.Next
-	}
-	i.Next = l.front
-	i.Prev = nil
-	if l.front != nil {
-		l.front.Prev = i
-	}
-	l.front = i
 }
