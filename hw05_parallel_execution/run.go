@@ -9,35 +9,21 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-type worker struct {
-	tasks       <-chan Task
-	done        <-chan struct{}
-	results     chan<- error
-	jobsRunning int32
-}
-
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
-	numTasks := len(tasks)
-	chTasks := make(chan Task, numTasks)
-	chResults := make(chan error, numTasks)
-	chDone := make(chan struct{})
-	worker := newWorker(chTasks, chDone, chResults)
-	worker.Run(n)
+	done := make(chan struct{})
+	defer close(done)
 
-	defer close(chDone)
-
-	for _, t := range tasks {
-		chTasks <- t
-	}
-	close(chTasks)
+	chTasks := newTasksChannel(tasks, done)
+	chResults := newResultsChannel(chTasks, n, done)
 
 	totalErrors := 0
 	for err := range chResults {
-		if err != nil {
-			totalErrors++
+		if err == nil {
+			continue
 		}
 
+		totalErrors++
 		if m > 0 && totalErrors >= m {
 			return ErrErrorsLimitExceeded
 		}
@@ -46,34 +32,45 @@ func Run(tasks []Task, n, m int) error {
 	return nil
 }
 
-func newWorker(jobs <-chan Task, done <-chan struct{}, results chan<- error) *worker {
-	return &worker{
-		tasks:   jobs,
-		done:    done,
-		results: results,
-	}
-}
+func newTasksChannel(tasks []Task, done <-chan struct{}) <-chan Task {
+	result := make(chan Task)
 
-func (w *worker) Run(numJobs int) {
-	for i := 0; i < numJobs; i++ {
-		go w.doWork()
-		atomic.AddInt32(&w.jobsRunning, 1)
-	}
-}
+	go func() {
+		defer close(result)
 
-func (w *worker) doWork() {
-	defer func() {
-		if remaining := atomic.AddInt32(&w.jobsRunning, -1); remaining == 0 {
-			close(w.results)
+		for _, task := range tasks {
+			select {
+			case result <- task:
+			case <-done:
+				return
+			}
 		}
 	}()
 
-	for t := range w.tasks {
-		select {
-		case <-w.done:
-			return
-		default:
-			w.results <- t()
-		}
+	return result
+}
+
+func newResultsChannel(tasks <-chan Task, workersCount int, done <-chan struct{}) <-chan error {
+	result := make(chan error)
+	workersRunning := int32(workersCount)
+
+	for i := 0; i < workersCount; i++ {
+		go func() {
+			defer func() {
+				if currentWorkers := atomic.AddInt32(&workersRunning, -1); currentWorkers == 0 {
+					close(result)
+				}
+			}()
+
+			for task := range tasks {
+				select {
+				case result <- task():
+				case <-done:
+					return
+				}
+			}
+		}()
 	}
+
+	return result
 }
