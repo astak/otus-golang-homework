@@ -10,12 +10,11 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
-func Run(tasks []Task, n, m int) error {
-	done := make(chan struct{})
-	defer close(done)
+func Run(tasks []Task, n, m int) (result error) {
+	abort := make(chan struct{})
 
-	chTasks := newTasksChannel(tasks, done)
-	chResults := newResultsChannel(chTasks, n, done)
+	chTasks := newTasksChannel(tasks, abort)
+	chResults := newResultsChannel(chTasks, n)
 
 	totalErrors := 0
 	for err := range chResults {
@@ -24,15 +23,16 @@ func Run(tasks []Task, n, m int) error {
 		}
 
 		totalErrors++
-		if m > 0 && totalErrors >= m {
-			return ErrErrorsLimitExceeded
+		if m > 0 && totalErrors >= m && result == nil {
+			close(abort)
+			result = ErrErrorsLimitExceeded
 		}
 	}
 
-	return nil
+	return
 }
 
-func newTasksChannel(tasks []Task, done <-chan struct{}) <-chan Task {
+func newTasksChannel(tasks []Task, abort <-chan struct{}) <-chan Task {
 	result := make(chan Task)
 
 	go func() {
@@ -41,7 +41,7 @@ func newTasksChannel(tasks []Task, done <-chan struct{}) <-chan Task {
 		for _, task := range tasks {
 			select {
 			case result <- task:
-			case <-done:
+			case <-abort:
 				return
 			}
 		}
@@ -50,7 +50,7 @@ func newTasksChannel(tasks []Task, done <-chan struct{}) <-chan Task {
 	return result
 }
 
-func newResultsChannel(tasks <-chan Task, workersCount int, done <-chan struct{}) <-chan error {
+func newResultsChannel(tasks <-chan Task, workersCount int) <-chan error {
 	result := make(chan error)
 	workersRunning := int32(workersCount)
 
@@ -63,11 +63,7 @@ func newResultsChannel(tasks <-chan Task, workersCount int, done <-chan struct{}
 			}()
 
 			for task := range tasks {
-				select {
-				case result <- task():
-				case <-done:
-					return
-				}
+				result <- task()
 			}
 		}()
 	}
