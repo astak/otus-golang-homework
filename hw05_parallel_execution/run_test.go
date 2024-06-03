@@ -35,7 +35,10 @@ func TestRun(t *testing.T) {
 		err := Run(tasks, workersCount, maxErrorsCount)
 
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
-		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
+
+		actualRunTasks := atomic.LoadInt32(&runTasksCount)
+		expectedRunTasks := int32(workersCount + maxErrorsCount)
+		require.LessOrEqual(t, actualRunTasks, expectedRunTasks, "extra tasks were started")
 	})
 
 	t.Run("tasks without errors", func(t *testing.T) {
@@ -59,12 +62,39 @@ func TestRun(t *testing.T) {
 		workersCount := 5
 		maxErrorsCount := 1
 
-		start := time.Now()
-		err := Run(tasks, workersCount, maxErrorsCount)
-		elapsedTime := time.Since(start)
-		require.NoError(t, err)
+		ch := make(chan error)
+		go func() {
+			defer close(ch)
+			ch <- Run(tasks, workersCount, maxErrorsCount)
+		}()
 
-		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
-		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+		require.Eventually(t, func() bool {
+			return atomic.LoadInt32(&runTasksCount) == int32(tasksCount)
+		}, sumTime/2, 10*time.Millisecond, "tasks were run sequentially or not all tasks were completed")
+
+		err := <-ch
+		require.NoError(t, err)
+	})
+
+	t.Run("ignore errors", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			err := fmt.Errorf("error from task %d", i)
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				atomic.AddInt32(&runTasksCount, 1)
+				return err
+			})
+		}
+
+		workersCount := 10
+		maxErrorsCount := 0
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.NoError(t, err, "errors not ignored")
 	})
 }
